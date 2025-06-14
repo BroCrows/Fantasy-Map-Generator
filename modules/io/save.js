@@ -213,18 +213,6 @@ async function initiateAutosave() {
   setInterval(autosave, MINUTE / 2);
 }
 
-// TODO: unused code
-async function compressData(uncompressedData) {
-  const compressedStream = new Blob([uncompressedData]).stream().pipeThrough(new CompressionStream("gzip"));
-
-  let compressedData = [];
-  for await (const chunk of compressedStream) {
-    compressedData = compressedData.concat(Array.from(chunk));
-  }
-
-  return new Uint8Array(compressedData);
-}
-
 const saveReminder = function () {
   if (localStorage.getItem("noReminder")) return;
   const message = [

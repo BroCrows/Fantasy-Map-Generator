@@ -240,10 +240,13 @@ function addBurgsGroup(group) {
   const iconCopy = document.querySelector("#burgIcons > #towns").cloneNode(false);
   const anchorCopy = document.querySelector("#anchors > #towns").cloneNode(false);
 
-  // FIXME: using the same id is against the spec!
-  document.querySelector("#burgLabels").appendChild(labelCopy).id = group;
-  document.querySelector("#burgIcons").appendChild(iconCopy).id = group;
-  document.querySelector("#anchors").appendChild(anchorCopy).id = group;
+  labelCopy.id = group;
+  iconCopy.id = group;
+  anchorCopy.id = group;
+
+  document.querySelector("#burgLabels").appendChild(labelCopy);
+  document.querySelector("#burgIcons").appendChild(iconCopy);
+  document.querySelector("#anchors").appendChild(anchorCopy);
 }
 
 function removeBurg(id) {

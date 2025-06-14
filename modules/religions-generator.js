@@ -155,7 +155,10 @@ window.Religions = (function () {
       "Wolverine",
       "Worm",
       "Wyvern",
-      "Yeti"
+      "Yeti",
+      "Beetle",
+      "Coyote",
+      "Dolphin"
     ],
     adjective: [
       "Aggressive",
@@ -267,7 +270,10 @@ window.Religions = (function () {
       "Wild",
       "Wise",
       "Worried",
-      "Young"
+      "Young",
+      "Cunning",
+      "Fierce",
+      "Stoic"
     ],
     genitive: [
       "Cold",
@@ -354,8 +360,26 @@ window.Religions = (function () {
       "Teal",
       "Turquoise",
       "White",
-      "Yellow"
+      "Yellow",
+      "Cerulean"
     ]
+  };
+
+  const meaningStrategies = {
+    Number: () => ra(base.number),
+    Being: () => ra(base.being),
+    Adjective: () => ra(base.adjective),
+    "Color + Animal": () => `${ra(base.color)} ${ra(base.animal)}`,
+    "Adjective + Animal": () => `${ra(base.adjective)} ${ra(base.animal)}`,
+    "Adjective + Being": () => `${ra(base.adjective)} ${ra(base.being)}`,
+    "Adjective + Genitive": () => `${ra(base.adjective)} ${ra(base.genitive)}`,
+    "Color + Being": () => `${ra(base.color)} ${ra(base.being)}`,
+    "Color + Genitive": () => `${ra(base.color)} ${ra(base.genitive)}`,
+    "Being + of + Genitive": () => `${ra(base.being)} of ${ra(base.genitive)}`,
+    "Being + of the + Genitive": () => `${ra(base.being)} of the ${ra(base.theGenitive)}`,
+    "Animal + of + Genitive": () => `${ra(base.animal)} of ${ra(base.genitive)}`,
+    "Adjective + Being + of + Genitive": () => `${ra(base.adjective)} ${ra(base.being)} of ${ra(base.genitive)}`,
+    "Adjective + Animal + of + Genitive": () => `${ra(base.adjective)} ${ra(base.animal)} of ${ra(base.genitive)}`
   };
 
   const forms = {
@@ -870,24 +894,8 @@ window.Religions = (function () {
   };
 
   function generateMeaning() {
-    const a = ra(approaches); // select generation approach
-    if (a === "Number") return ra(base.number);
-    if (a === "Being") return ra(base.being);
-    if (a === "Adjective") return ra(base.adjective);
-    if (a === "Color + Animal") return `${ra(base.color)} ${ra(base.animal)}`;
-    if (a === "Adjective + Animal") return `${ra(base.adjective)} ${ra(base.animal)}`;
-    if (a === "Adjective + Being") return `${ra(base.adjective)} ${ra(base.being)}`;
-    if (a === "Adjective + Genitive") return `${ra(base.adjective)} ${ra(base.genitive)}`;
-    if (a === "Color + Being") return `${ra(base.color)} ${ra(base.being)}`;
-    if (a === "Color + Genitive") return `${ra(base.color)} ${ra(base.genitive)}`;
-    if (a === "Being + of + Genitive") return `${ra(base.being)} of ${ra(base.genitive)}`;
-    if (a === "Being + of the + Genitive") return `${ra(base.being)} of the ${ra(base.theGenitive)}`;
-    if (a === "Animal + of + Genitive") return `${ra(base.animal)} of ${ra(base.genitive)}`;
-    if (a === "Adjective + Being + of + Genitive")
-      return `${ra(base.adjective)} ${ra(base.being)} of ${ra(base.genitive)}`;
-    if (a === "Adjective + Animal + of + Genitive")
-      return `${ra(base.adjective)} ${ra(base.animal)} of ${ra(base.genitive)}`;
-
+    const strategy = meaningStrategies[ra(approaches)];
+    if (strategy) return strategy();
     ERROR && console.error("Unkown generation approach");
   }
 
@@ -908,20 +916,25 @@ window.Religions = (function () {
       return adj ? getAdjective(name) : name;
     };
 
+    const methodMap = {
+      "Random + type": () => [random() + " " + type, "global"],
+      "Random + ism": () => [trimVowels(random()) + "ism", "global"],
+      "Supreme + ism": () => (deity ? [trimVowels(supreme) + "ism", "global"] : null),
+      "Faith of + Supreme": () =>
+        deity ? [ra(["Faith", "Way", "Path", "Word", "Witnesses"]) + " of " + supreme, "global"] : null,
+      "Place + ism": () => [place() + "ism", "state"],
+      "Culture + ism": () => [trimVowels(culture) + "ism", "culture"],
+      "Place + ian + type": () => [place("adj") + " " + type, "state"],
+      "Culture + type": () => [culture + " " + type, "culture"],
+      "Burg + ian + type": () => [`${place("adj")} ${type}`, "global"],
+      "Random + ian + type": () => [`${getAdjective(random())} ${type}`, "global"],
+      "Type + of the + meaning": () => [`${type} of the ${generateMeaning()}`, "global"]
+    };
+
     const m = rw(namingMethods[variety]);
-    if (m === "Random + type") return [random() + " " + type, "global"];
-    if (m === "Random + ism") return [trimVowels(random()) + "ism", "global"];
-    if (m === "Supreme + ism" && deity) return [trimVowels(supreme) + "ism", "global"];
-    if (m === "Faith of + Supreme" && deity)
-      return [ra(["Faith", "Way", "Path", "Word", "Witnesses"]) + " of " + supreme, "global"];
-    if (m === "Place + ism") return [place() + "ism", "state"];
-    if (m === "Culture + ism") return [trimVowels(culture) + "ism", "culture"];
-    if (m === "Place + ian + type") return [place("adj") + " " + type, "state"];
-    if (m === "Culture + type") return [culture + " " + type, "culture"];
-    if (m === "Burg + ian + type") return [`${place("adj")} ${type}`, "global"];
-    if (m === "Random + ian + type") return [`${getAdjective(random())} ${type}`, "global"];
-    if (m === "Type + of the + meaning") return [`${type} of the ${generateMeaning()}`, "global"];
-    return [trimVowels(random()) + "ism", "global"]; // else
+    const result = methodMap[m] ? methodMap[m]() : null;
+    if (result) return result;
+    return [trimVowels(random()) + "ism", "global"]; // fallback
   }
 
   return {generate, add, getDeityName, updateCultures, recalculate};

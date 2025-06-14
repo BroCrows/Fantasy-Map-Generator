@@ -125,7 +125,10 @@ function isCtrlClick(event) {
 }
 
 function generateDate(from = 100, to = 1000) {
-  return new Date(rand(from, to), rand(12), rand(31)).toLocaleDateString("en", {
+  const year = rand(from, to);
+  const month = rand(0, 11); // month index [0,11]
+  const day = rand(1, 28); // safe day range [1,28]
+  return new Date(year, month, day).toLocaleDateString("en", {
     year: "numeric",
     month: "long",
     day: "numeric"

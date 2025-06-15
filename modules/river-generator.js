@@ -360,7 +360,25 @@ window.Rivers = (function () {
       }
     }
 
-    return meandered;
+    return avoidAcuteAngles(meandered);
+  };
+
+  // smooth sharp angles between consecutive river points
+  const avoidAcuteAngles = function (points, threshold = Math.PI / 6) {
+    for (let i = 1; i < points.length - 1; i++) {
+      const [x0, y0] = points[i - 1];
+      const [x1, y1] = points[i];
+      const [x2, y2] = points[i + 1];
+      const angle1 = Math.atan2(y1 - y0, x1 - x0);
+      const angle2 = Math.atan2(y2 - y1, x2 - x1);
+      let diff = Math.abs(angle2 - angle1);
+      if (diff > Math.PI) diff = Math.abs(2 * Math.PI - diff);
+      if (diff < threshold) {
+        points[i][0] = (x0 + x2) / 2;
+        points[i][1] = (y0 + y2) / 2;
+      }
+    }
+    return points;
   };
 
   const getRiverPoints = (riverCells, riverPoints) => {

@@ -313,76 +313,41 @@ function drawPrecipitation() {
 }
 
 function togglePopulation(event) {
-  if (!population.selectAll("line").size()) {
+  const density = population.select("#density");
+  if (!density.selectAll("path").size()) {
     turnButtonOn("togglePopulation");
     drawPopulation();
     if (event && isCtrlClick(event)) editStyle("population");
   } else {
     if (event && isCtrlClick(event)) return editStyle("population");
     turnButtonOff("togglePopulation");
-
-    const isD3data = population.select("line").datum();
-    if (!isD3data) {
-      // just remove
-      population.selectAll("line").remove();
-    } else {
-      // remove with animation
-      const hide = d3.transition().duration(1000).ease(d3.easeSinIn);
-      population
-        .select("#rural")
-        .selectAll("line")
-        .transition(hide)
-        .attr("y2", d => d[1])
-        .remove();
-      population
-        .select("#urban")
-        .selectAll("line")
-        .transition(hide)
-        .delay(1000)
-        .attr("y2", d => d[1])
-        .remove();
-    }
+    density.selectAll("path").remove();
   }
 }
 
 function drawPopulation() {
   population.selectAll("line").remove();
 
-  const {cells, burgs} = pack;
-  const show = d3.transition().duration(2000).ease(d3.easeSinIn);
+  let density = population.select("#density");
+  if (!density.size()) density = population.insert("g", ":first-child").attr("id", "density");
+  density.selectAll("path").remove();
 
-  const rural = Array.from(
-    cells.i.filter(i => cells.pop[i] > 0),
-    i => [...cells.p[i], cells.p[i][1] - cells.pop[i] / 5]
-  );
+  const {cells} = pack;
+  const data = cells.i.filter(i => cells.pop[i] > 0);
+  const max = d3.max(data, i => cells.pop[i]);
+  const color = d3.scaleSequential(d3.interpolateOrRd).domain([0, max]);
+  const show = d3.transition().duration(1000).ease(d3.easeSinIn);
 
-  population
-    .select("#rural")
-    .selectAll("line")
-    .data(rural)
+  density
+    .selectAll("path")
+    .data(data)
     .enter()
-    .append("line")
-    .attr("x1", d => d[0])
-    .attr("y1", d => d[1])
-    .attr("x2", d => d[0])
-    .attr("y2", d => d[1])
+    .append("path")
+    .attr("d", i => `M${getPackPolygon(i).join("L")}Z`)
+    .attr("fill", i => color(cells.pop[i]))
+    .attr("opacity", 0)
     .transition(show)
-    .attr("y2", d => d[2]);
-
-  const urban = burgs.filter(b => b.i && !b.removed).map(b => [b.x, b.y, b.y - (b.population / 5) * urbanization]);
-  population
-    .select("#urban")
-    .selectAll("line")
-    .data(urban)
-    .enter()
-    .append("line")
-    .attr("x1", d => d[0])
-    .attr("y1", d => d[1])
-    .attr("x2", d => d[0])
-    .attr("y2", d => d[1])
-    .transition(show)
-    .delay(500)
-    .attr("y2", d => d[2]);
+    .attr("opacity", 1);
 }
 
 function toggleCells(event) {

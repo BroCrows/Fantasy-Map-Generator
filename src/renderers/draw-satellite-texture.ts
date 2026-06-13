@@ -3,6 +3,11 @@ import { type ErosionBakeResult, heightAt } from "../modules/erosion-bake";
 
 let renderTarget: THREEType.WebGLRenderTarget | null = null;
 
+function hexToRgbNorm(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+}
+
 // biome id -> satellite albedo and vegetation density
 const BIOME_SATELLITE: Array<{ color: [number, number, number]; density: number }> = [
   { color: [0.24, 0.58, 0.71], density: 0 }, // 0 Marine (only near data edges)
@@ -83,7 +88,9 @@ function buildBiomeTexture() {
   for (let i = 0; i < n; i++) {
     let biomeId = biomeOfGrid[i];
     if (!assigned[i]) biomeId = Biomes.getId(prec[i] + 4, temp[i], h[i], false);
-    const { color, density } = BIOME_SATELLITE[biomeId] || BIOME_SATELLITE[0];
+    const sat = BIOME_SATELLITE[biomeId];
+    const color: [number, number, number] = sat ? sat.color : hexToRgbNorm(biomesData?.color?.[biomeId] ?? "#74a94a");
+    const density = sat ? sat.density : 0.4;
     data[i * 4] = color[0] * 255;
     data[i * 4 + 1] = color[1] * 255;
     data[i * 4 + 2] = color[2] * 255;
